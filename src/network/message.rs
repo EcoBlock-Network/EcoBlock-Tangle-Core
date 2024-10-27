@@ -13,3 +13,17 @@ impl Message {
         }
     }
 }
+
+
+//tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn create_message() {
+        let message = Message::new("peer1", "Hello, world!");
+        assert_eq!(message.sender_id, "peer1");
+        assert_eq!(message.content, "Hello, world!");
+    }
+}
