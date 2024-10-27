@@ -1,5 +1,8 @@
 use super::peer::Peer;
 use super::message::Message;
+use tokio::net::{TcpListener, TcpStream};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use std::net::SocketAddr;
 
 #[derive(Debug)]
 
@@ -33,6 +36,19 @@ impl Communication{
         print!("Broadcasting message: {:?}", message);
         for peer in &self.connected_peers{
             println!("Sending message to {}: {:?}", peer.id, message);
+        }
+    }
+
+    //Method to start a TCP server for accepting incoming connections
+    pub async fn start_server(&self, address: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let listener = TcpListener::bind(address).await?;
+        print!("Server listening on {}", address);
+
+        loop {
+            let (socket, _) = listener.accept().await?;
+           // tokio::spawn(async move {
+            //    handle_connection(socket).await;
+           // });
         }
     }
 }
