@@ -1,4 +1,4 @@
-use super::communication::Communication;
+use communication::Communication;
 
 pub mod peer;
 pub mod message;
@@ -27,5 +27,10 @@ impl Network {
     pub fn remove_peer(&mut self, peer_id : &str){
         self.peers.retain(|p| p.id != peer_id);
         self.communication.disconnect_peer(peer_id);
+    }
+
+    //Method to broadcast a message to all connected peers
+    pub fn broadcast_message(&self, sender_id: &str, content: &str){
+        self.communication.broadcast_message(sender_id, content);
     }
 }
