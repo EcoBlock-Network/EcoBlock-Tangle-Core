@@ -3,7 +3,7 @@ pub mod message;
 
 
 pub struct Network {
-    peers: Vec<peer::Peer>
+    pub peers: Vec<peer::Peer>
 }
 
 impl Network {
