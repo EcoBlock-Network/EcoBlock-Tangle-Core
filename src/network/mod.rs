@@ -24,9 +24,9 @@ impl Network {
     }
 
     //Method to remove a peer from the network
-    pub fn remove_peer(&mut self, peer_id : &str){
-        self.peers.retain(|p| p.id != peer_id);
-        self.communication.disconnect_peer(peer_id);
+    pub fn remove_peer(&mut self, peer: peer::Peer){
+        self.peers.retain(|p| p.id != peer.id);
+        self.communication.disconnect_peer(peer);
     }
 
     //Method to broadcast a message to all connected peers
