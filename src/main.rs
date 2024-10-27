@@ -1,18 +1,29 @@
 use ecoblock_tangle_core::network::{Network, peer::Peer};
+use tokio;
+use std::sync::Arc;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let mut network = Network::new();
     
-    let peer1 = Peer::new("peer1", "192.168.1.1:8080");
-    let peer2 = Peer::new("peer2", "192.168.1.2:8080");
+    let peer1 = Peer::new("peer1", "127.0.0.1:8081");
+    let peer2 = Peer::new("peer2", "127.0.0.1:8082");
 
-    network.add_peer(peer1.clone());
-    network.add_peer(peer2);
+    network.add_peer(peer1.clone()).await;
+    network.add_peer(peer2.clone()).await;
 
     println!("Network initialized with peers: {:?}", network.peers);
 
-    network.broadcast_message("peer1", "Hello from peer1!");
+    let communication = Arc::clone(&network.communication);
 
-    network.remove_peer(peer1);  
-    println!("Network after removing peer1: {:?}", network.peers);
+    tokio::spawn(async move {
+        let comm = communication.lock().await;
+        comm.start_server("127.0.0.1:8081").await.unwrap();
+    });
+
+    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+    network.communication.lock().await
+        .send_message("127.0.0.1:8081", "Hello from peer2!")
+        .await
+        .unwrap();
 }
