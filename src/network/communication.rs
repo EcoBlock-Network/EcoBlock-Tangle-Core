@@ -20,4 +20,10 @@ impl Communication{
         print!("Peer connected: {:?}", peer);
         self.connected_peers.push(peer);
     }
+
+    //Method to delete a peer from the list of connected peers
+    pub fn disconnect_peer(&mut self, peer: Peer){
+        print!("Peer disconnected: {:?}", peer);
+        self.connected_peers.retain(|p| p.id != peer.id);
+    }
 }
