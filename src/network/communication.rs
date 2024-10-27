@@ -46,11 +46,29 @@ impl Communication{
 
         loop {
             let (socket, _) = listener.accept().await?;
-           // tokio::spawn(async move {
-            //    handle_connection(socket).await;
-           // });
+            tokio::spawn(Self::handle_connection(socket));
         }
-    }
+        }
+    
+
+    //Method to handle incoming connections
+    async fn handle_connection(mut socket : TcpStream){
+        let mut buffer = [0u8; 1024];
+
+        loop {
+            let bytes_read = socket.read(&mut buffer).await.unwrap();
+
+            if bytes_read == 0 {
+                break;
+            }
+
+            let message = String::from_utf8_lossy(&buffer[..bytes_read]);
+            print!("Received message: {:?}", message);
+
+            //Echo the message back to the sender
+            socket.write_all(&buffer[..bytes_read]).await.unwrap();
+        }
+    } 
 }
 
 //tests
