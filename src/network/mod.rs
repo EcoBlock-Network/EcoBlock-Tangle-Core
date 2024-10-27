@@ -1,5 +1,6 @@
 pub mod peer;
 pub mod message;
+pub mod communication;
 
 
 pub struct Network {
