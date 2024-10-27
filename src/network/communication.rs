@@ -1,5 +1,8 @@
 use super::peer::Peer;
 use super::message::Message;
+use tokio::net::{TcpListener, TcpStream};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use std::net::SocketAddr;
 
 #[derive(Debug)]
 
@@ -34,6 +37,44 @@ impl Communication{
         for peer in &self.connected_peers{
             println!("Sending message to {}: {:?}", peer.id, message);
         }
+    }
+
+    //Method to start a TCP server for accepting incoming connections
+    pub async fn start_server(&self, address: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let listener = TcpListener::bind(address).await?;
+        print!("Server listening on {}", address);
+
+        loop {
+            let (socket, _) = listener.accept().await?;
+            tokio::spawn(Self::handle_connection(socket));
+        }
+        }
+    
+
+    //Method to handle incoming connections
+    async fn handle_connection(mut socket : TcpStream){
+        let mut buffer = [0u8; 1024];
+
+        loop {
+            let bytes_read = socket.read(&mut buffer).await.unwrap();
+
+            if bytes_read == 0 {
+                break;
+            }
+
+            let message = String::from_utf8_lossy(&buffer[..bytes_read]);
+            print!("Received message: {:?}", message);
+
+            //Echo the message back to the sender
+            socket.write_all(&buffer[..bytes_read]).await.unwrap();
+        }
+    } 
+
+    //Method to send a message to a peer
+    pub async fn send_message(&self, address: &str, message: &str) -> tokio::io::Result<()> {
+        let mut stream = TcpStream::connect(address).await?;
+        stream.write_all(message.as_bytes()).await?;
+        Ok(())
     }
 }
 
