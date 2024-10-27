@@ -69,6 +69,13 @@ impl Communication{
             socket.write_all(&buffer[..bytes_read]).await.unwrap();
         }
     } 
+
+    //Method to send a message to a peer
+    pub async fn send_message(&self, address: &str, message: &str) -> tokio::io::Result<()> {
+        let mut stream = TcpStream::connect(address).await?;
+        stream.write_all(message.as_bytes()).await?;
+        Ok(())
+    }
 }
 
 //tests
