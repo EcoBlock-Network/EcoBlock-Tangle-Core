@@ -17,13 +17,26 @@ async fn main() {
     let communication = Arc::clone(&network.communication);
 
     tokio::spawn(async move {
-        let comm = communication.lock().await;
+        let mut comm = communication.lock().await;
         comm.start_server("127.0.0.1:8081").await.unwrap();
     });
 
     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+
     network.communication.lock().await
         .send_message("127.0.0.1:8081", "Hello from peer2!")
+        .await
+        .unwrap();
+
+    let communication2 = Arc::clone(&network.communication);
+    tokio::spawn(async move {
+        let mut comm = communication2.lock().await;
+        comm.start_server("127.0.0.1:8082").await.unwrap();
+    });
+
+    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+    network.communication.lock().await
+        .send_message("127.0.0.1:8082", "Hello from peer1!")
         .await
         .unwrap();
 }

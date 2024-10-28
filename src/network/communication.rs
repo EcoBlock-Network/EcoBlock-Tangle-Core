@@ -52,30 +52,51 @@ impl Communication{
     
 
     //Method to handle incoming connections
-    async fn handle_connection(mut socket : TcpStream){
+    async fn handle_connection(mut socket: TcpStream) {
         let mut buffer = [0u8; 1024];
 
         loop {
-            let bytes_read = socket.read(&mut buffer).await.unwrap();
-
-            if bytes_read == 0 {
-                break;
-            }
+            let bytes_read = match socket.read(&mut buffer).await {
+                Ok(bytes) if bytes == 0 => break, 
+                Ok(bytes) => bytes,
+                Err(_) => break,
+            };
 
             let message = String::from_utf8_lossy(&buffer[..bytes_read]);
-            print!("Received message: {:?}", message);
+            println!("Received: {}", message);
 
-            //Echo the message back to the sender
-            socket.write_all(&buffer[..bytes_read]).await.unwrap();
+            // Echo du message reçu
+            if let Err(e) = socket.write_all(&buffer[..bytes_read]).await {
+                println!("Failed to send message: {}", e);
+            }
         }
-    } 
+    }
 
     //Method to send a message to a peer
-    pub async fn send_message(&self, address: &str, message: &str) -> tokio::io::Result<()> {
-        let mut stream = TcpStream::connect(address).await?;
-        stream.write_all(message.as_bytes()).await?;
-        Ok(())
+pub async fn send_message(&self, address: &str, message: &str) -> tokio::io::Result<()> {
+    println!("Connecting to peer at {}", address);
+    let mut stream = TcpStream::connect(address).await?;
+    println!("Sending message to {}: {}", address, message);
+    
+    stream.write_all(message.as_bytes()).await?;
+    
+    let mut buffer = [0u8; 1024];
+    match stream.read(&mut buffer).await {
+        Ok(bytes) if bytes > 0 => {
+            let response = String::from_utf8_lossy(&buffer[..bytes]);
+            println!("Received response: {}", response);
+        }
+        Ok(_) => {
+            println!("Connection closed by the peer after sending the message.");
+        }
+        Err(e) => {
+            println!("Error reading response from peer: {}", e);
+        }
     }
+    
+    println!("Closing connection to {}", address);
+    Ok(())
+}
 }
 
 //tests
@@ -110,7 +131,6 @@ mod tests {
         comm.connect_peer(peer1);
         comm.connect_peer(peer2);
         
-        // Pour ce test, on va simplement vérifier que l'envoi de message ne provoque pas d'erreur
         comm.broadcast_message("peer1", "Hello from peer1!");
     }
 }
